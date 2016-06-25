@@ -60,6 +60,22 @@ class Team(models.Model):
 	def record(self):
 		return "{0}-{1}-{2}".format(self.wins, self.losses, self.ties)
 
+	def to_data(self):
+		data = {
+			'name': self.name,
+			'owner': self.owner.username,
+			'record': self.record,
+			'players': [{
+				'id': player.id,
+				'name': player.name,
+				'position': player.position,
+				'team': player.nba_team
+			} for player in self.players.all()]
+		}
+
+		return data
+
+
 	# def clean(self):
 	# 	for player in self.players.all():
 	# 		if not player.is_available(self.league.id):
