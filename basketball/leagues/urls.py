@@ -3,6 +3,6 @@ from django.conf.urls import url
 from leagues import views
 
 urlpatterns = (
-    url(r'^league/(?P<league_id>\d+).json$', views.LeagueView.as_view(), name='team'),
-    url(r'^teams/(?P<team_id>\d+).json$', views.TeamView.as_view(), name='team'),
+    url(r'^(?P<page_path>.+)/?$', views.WebPageWrapperView.as_view(), name='web_page_wrapper'),
+    url(r'', views.LeaguesListView.as_view(), name='league_list'),
 )
