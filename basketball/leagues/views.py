@@ -1,40 +1,16 @@
-import json
-
-from django.conf import settings
-from django.core.serializers.json import DjangoJSONEncoder
-from django.http import HttpResponse
-from django.views.generic import TemplateView, View
-
-from leagues.models import Team
-
-class JSONHttpResponse(HttpResponse):
-    def __init__(self, content=None, *args, **kwargs):
-        kwargs['content_type'] = 'application/json'
-        content = json.dumps(content, cls=DjangoJSONEncoder)
-        super(JSONHttpResponse, self).__init__(content, *args, **kwargs)
+from leagues.models import Team, League
+from leagues.utils import JSONView
 
 
-class JSONView(View):
+class LeagueView(JSONView):
+    def get(self, request, league_id):
+        try:
+			league = League.objects.get(id=league_id)
+        except League.DoesNotExist:
+            raise Http404()
 
-    def dispatch(self, request, *args, **kwargs):
-        data = super(JSONView, self).dispatch(request, *args, **kwargs)
-
-        if settings.DEBUG and getattr(settings, 'DEBUG_TOOLBAR_ENABLED', False) \
-                and request.GET.get('debug', "false").lower() in ('yes', '1', 'true'):
-            return HttpResponse("<http><body><h1>DEBUG TOOLBAR STUFF</h1></body></http>")
-
-        if isinstance(data, HttpResponse):
-            return data
-        else:
-            return JSONHttpResponse(data)
-
-# class LeagueView(TemplateView):
-# 	template_name = 'leagues/league_home.html'
-
-# 	# def get_context_data(self, **kwargs):
-# 	# 	context = super(LeagueHomeView, self).get_context_data(**kwargs)
-
-# 	# 	user = self.request.user
+        data = league.to_data()
+        return data
 
 
 class TeamView(JSONView):

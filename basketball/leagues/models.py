@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 
 
 class League(models.Model):
@@ -16,11 +17,11 @@ class League(models.Model):
 	def to_data(self, roster_data=False):
 		data = {
 			'name': self.name,
-			'manager': self.manager,
+			'manager': self.manager.username,
 			'is_dynasty': self.is_dynasty,
 			'teams': [{
 				'name': team.name,
-				'owner': team.owner,
+				'owner': team.owner.username,
 				'record': team.record
 			} for team in self.teams.all()]
 		}
@@ -75,11 +76,8 @@ class Team(models.Model):
 
 		return data
 
-
-	# def clean(self):
-	# 	for player in self.players.all():
-	# 		if not player.is_available(self.league.id):
-	# 			raise ValidationError("sorry, {} is not available.".format(player))
-
-
+	def clean(self):
+		for player in self.players.all():
+			if Team.objects.filter(league=self.league).exclude(id=self.pk).filter(players__name=player.name):
+				raise IntegrityError('%s is already on a team in this league: %s' % (player.name, self.name))
 
