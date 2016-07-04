@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.db.utils import IntegrityError
 
 
@@ -14,7 +15,11 @@ class League(models.Model):
 	def __unicode__(self):
 		return self.name
 
-	def to_data(self, roster_data=False):
+	@property
+	def get_api_url(self):
+		return reverse('league', kwargs={'league_id': self.id})
+
+	def to_data(self, team_data=False):
 		data = {
 			'name': self.name,
 			'manager': self.manager.username,
@@ -26,10 +31,10 @@ class League(models.Model):
 			} for team in self.teams.all()]
 		}
 
-		if roster_data:
+		if team_data:
 			data['teams'] = [{
 				'name': team.name,
-				'owner': team.owner,
+				'owner': team.owner.username,
 				'record': team.record,
 				'players': [{
 					'name': player.name,
@@ -60,6 +65,10 @@ class Team(models.Model):
 	@property
 	def record(self):
 		return "{0}-{1}-{2}".format(self.wins, self.losses, self.ties)
+
+	@property
+	def get_api_url(self):
+		return reverse('team', kwargs={'team_id': self.id})
 
 	def to_data(self):
 		data = {
